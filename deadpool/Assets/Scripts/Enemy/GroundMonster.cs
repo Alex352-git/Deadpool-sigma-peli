@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
+[RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider), typeof(AudioSource))]
 public class LizardMonsterAI : MonoBehaviour, IDamageable
 {
     [Header("Audio & Volume")]
@@ -10,16 +10,16 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     public AudioClip attack2_Sound1;
     public AudioClip attack2_Sound2;
     [Range(-0.5f, 0.5f)] public float attack2_SecondHitNudge = 0f;
-    [Range(0f, 1f)] public float attackVolume = 1f; // Adjust attack volume here
+    [Range(0f, 1f)] public float attackVolume = 1f;
     public AudioClip[] deathSounds;
-    [Range(0f, 1f)] public float deathVolume = 1f; // Adjust death volume here
+    [Range(0f, 1f)] public float deathVolume = 1f;
 
-    [Header("Dimension Snapping")]
-    public float zSnapRange = 25f; // How close they need to be to jump into your 2D lane
+    [Header("Effects & Saving")]
+    public GameObject deathEffect;
 
     [Header("Health & Stats")]
     public int maxHealth = 100;
-    private int currentHealth;
+    public int currentHealth; // Made public temporarily so you can watch it in the Inspector
     public bool isDead = false;
 
     [Header("Targeting")]
@@ -30,6 +30,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     [Header("Combat")]
     public int attackDamage = 15;
     public float moveSpeed = 6f;
+    public float attackLungeSpeed = 4f; // <--- NEW: How fast they step forward during an attack
 
     private Rigidbody rb;
     private Animator anim;
@@ -48,6 +49,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     {
         currentHealth = maxHealth;
         rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
         anim = GetComponentInChildren<Animator>();
 
         if (player == null)
@@ -55,7 +57,9 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
             GameObject p = GameObject.FindGameObjectWithTag("Player");
             if (p != null) player = p.transform;
         }
-        anim.applyRootMotion = false;
+
+        // Ensure root motion is firmly turned OFF on the animator
+        if (anim != null) anim.applyRootMotion = false;
 
         meshRenderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[meshRenderers.Length];
@@ -65,28 +69,11 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
                 originalColors[i] = meshRenderers[i].material.color;
         }
 
-        // --- FORCE 3D AUDIO ---
         if (audioSource != null)
         {
-            audioSource.spatialBlend = 1f; // 100% 3D Audio
-            audioSource.maxDistance = 25f; // Sound cuts off if you are 25 units away
+            audioSource.spatialBlend = 1f;
+            audioSource.maxDistance = 25f;
             audioSource.rolloffMode = AudioRolloffMode.Linear;
-        }
-
-        // Subscribe to the Dimension Manager radio station
-      
-    }
-
- 
-
-    private void HandleDimensionSwitch(bool is2D)
-    {
-        if (isDead || player == null) return;
-
-        // If we switched to 2D and the player is close enough, snap to their Z line!
-        if (is2D && Vector3.Distance(transform.position, player.position) <= zSnapRange)
-        {
-            transform.position = new Vector3(transform.position.x, transform.position.y, player.position.z);
         }
     }
 
@@ -137,15 +124,13 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     IEnumerator Attack1Routine()
     {
         isAttacking = true;
-        rb.linearVelocity = Vector3.zero;
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         ChangeAnimationState("attack1", 0.1f);
 
         isParryable = true;
         yield return new WaitForSeconds(0.5f); // WINDUP
 
-        // --- PLAY ATTACK 1 SOUND ---
         if (audioSource != null && attack1_Sound != null) audioSource.PlayOneShot(attack1_Sound, attackVolume);
-
         isParryable = false;
 
         float activeDuration = 0.3f;
@@ -154,7 +139,10 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
         while (elapsed < activeDuration)
         {
-            if (isStunned || isDead) yield break;
+            if (isStunned || isDead) break;
+
+            // --- LUNGE FIX: Physically push the Rigidbody (and Collider) forward ---
+            rb.linearVelocity = transform.forward * attackLungeSpeed + new Vector3(0, rb.linearVelocity.y, 0);
 
             if (!hasHit && Vector3.Distance(transform.position, player.position) <= meleeRange + 0.5f)
             {
@@ -162,10 +150,12 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
                 hasHit = true;
             }
             elapsed += Time.deltaTime;
-            yield return null;
+            yield return new WaitForFixedUpdate(); // Wait for physics update
         }
 
-        yield return new WaitForSeconds(1.33f);
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Stop lunging
+
+        yield return new WaitForSeconds(1.33f - activeDuration);
         cooldownTimer = 0.5f;
         isAttacking = false;
     }
@@ -173,15 +163,13 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     IEnumerator Attack2Routine()
     {
         isAttacking = true;
-        rb.linearVelocity = Vector3.zero;
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         ChangeAnimationState("attack2", 0.1f);
 
         isParryable = true;
         yield return new WaitForSeconds(0.5f); // WINDUP 1
 
-        // --- PLAY ATTACK 2 SOUND 1 ---
         if (audioSource != null && attack2_Sound1 != null) audioSource.PlayOneShot(attack2_Sound1, attackVolume);
-
         isParryable = false;
 
         if (isStunned || isDead) yield break;
@@ -189,24 +177,29 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         float hit1Duration = 0.23f;
         float elapsed1 = 0f;
         bool hasHit1 = false;
+
         while (elapsed1 < hit1Duration)
         {
-            if (isStunned || isDead) yield break;
+            if (isStunned || isDead) break;
+
+            // LUNGE FIX 1
+            rb.linearVelocity = transform.forward * (attackLungeSpeed * 0.8f) + new Vector3(0, rb.linearVelocity.y, 0);
+
             if (!hasHit1 && Vector3.Distance(transform.position, player.position) <= meleeRange + 0.5f)
             {
                 DealDamageToPlayer();
                 hasHit1 = true;
             }
             elapsed1 += Time.deltaTime;
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
 
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Stop lunging 1
         isParryable = true;
-        yield return new WaitForSeconds(0.46f + attack2_SecondHitNudge); // WINDUP 2 + NUDGE
 
-        // --- PLAY ATTACK 2 SOUND 2 ---
+        yield return new WaitForSeconds(0.46f + attack2_SecondHitNudge);
+
         if (audioSource != null && attack2_Sound2 != null) audioSource.PlayOneShot(attack2_Sound2, attackVolume);
-
         isParryable = false;
 
         if (isStunned || isDead) yield break;
@@ -214,19 +207,26 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         float hit2Duration = 0.36f;
         float elapsed2 = 0f;
         bool hasHit2 = false;
+
         while (elapsed2 < hit2Duration)
         {
-            if (isStunned || isDead) yield break;
+            if (isStunned || isDead) break;
+
+            // LUNGE FIX 2
+            rb.linearVelocity = transform.forward * attackLungeSpeed + new Vector3(0, rb.linearVelocity.y, 0);
+
             if (!hasHit2 && Vector3.Distance(transform.position, player.position) <= meleeRange + 0.5f)
             {
                 DealDamageToPlayer();
                 hasHit2 = true;
             }
             elapsed2 += Time.deltaTime;
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
 
-        yield return new WaitForSeconds(2.3f);
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Stop lunging 2
+
+        yield return new WaitForSeconds(2.3f - hit1Duration - hit2Duration);
         cooldownTimer = 0.5f;
         isAttacking = false;
     }
@@ -234,11 +234,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     void DealDamageToPlayer()
     {
         PlayerStats pStats = player.transform.root.GetComponentInChildren<PlayerStats>();
-
-        if (pStats != null)
-        {
-            pStats.TakeDamage(attackDamage);
-        }
+        if (pStats != null) pStats.TakeDamage(attackDamage);
     }
 
     void ChangeAnimationState(string newState, float blendTime = 0.2f)
@@ -260,7 +256,8 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         isStunned = true;
         isAttacking = false;
         isParryable = false;
-        rb.linearVelocity = Vector3.zero;
+
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         ChangeAnimationState("hit", 0.1f);
         yield return new WaitForSeconds(2.0f);
         cooldownTimer = 1.0f;
@@ -273,6 +270,9 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
         currentHealth -= damage;
         StartCoroutine(FlashRedRoutine());
+
+       /* EnemyVisuals visuals = GetComponent<EnemyVisuals>();
+        if (visuals != null) visuals.Flash();*/
 
         if (currentHealth <= 0)
         {
@@ -299,7 +299,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
     void Die()
     {
-        if (isDead && currentHealth > 0) return;
+        if (isDead) return; // Prevent double-calls
         isDead = true;
 
         StopAllCoroutines();
@@ -313,6 +313,17 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         rb.linearVelocity = Vector3.zero;
         GetComponent<Collider>().enabled = false;
 
+        if (deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+        }
+
+        ObjectStateSaver saver = GetComponent<ObjectStateSaver>();
+        if (saver != null)
+        {
+            saver.MarkAsDestroyed();
+        }
+
         if (audioSource != null && deathSounds.Length > 0)
         {
             AudioClip randomClip = deathSounds[Random.Range(0, deathSounds.Length)];
@@ -320,7 +331,6 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         }
 
         ChangeAnimationState("die", 0.1f);
-
         Destroy(gameObject, 4f);
     }
 }
