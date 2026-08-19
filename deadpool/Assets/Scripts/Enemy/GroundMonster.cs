@@ -4,6 +4,12 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider), typeof(AudioSource))]
 public class LizardMonsterAI : MonoBehaviour, IDamageable
 {
+    [Header("Spawning")]
+    public GameObject spawnEffect;
+    public string spawnAnimationName = "idle";
+    public float spawnDuration = 1.5f;
+    public bool isSpawning = false;
+
     [Header("Audio & Volume")]
     public AudioSource audioSource;
     public AudioClip attack1_Sound;
@@ -19,7 +25,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
     [Header("Health & Stats")]
     public int maxHealth = 100;
-    public int currentHealth; // Made public temporarily so you can watch it in the Inspector
+    public int currentHealth;
     public bool isDead = false;
 
     [Header("Targeting")]
@@ -30,10 +36,11 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
     [Header("Combat")]
     public int attackDamage = 15;
     public float moveSpeed = 6f;
-    public float attackLungeSpeed = 4f; // <--- NEW: How fast they step forward during an attack
+    public float attackLungeSpeed = 4f;
 
     private Rigidbody rb;
     private Animator anim;
+    private Collider col;
 
     private bool isAttacking = false;
     public bool isStunned = false;
@@ -44,13 +51,19 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
     private Renderer[] meshRenderers;
     private Color[] originalColors;
+    private Vector3 finalTargetScale = Vector3.one;
+
+    void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
+        anim = GetComponentInChildren<Animator>();
+        col = GetComponent<Collider>();
+    }
 
     void Start()
     {
         currentHealth = maxHealth;
-        rb = GetComponent<Rigidbody>();
-        audioSource = GetComponent<AudioSource>();
-        anim = GetComponentInChildren<Animator>();
 
         if (player == null)
         {
@@ -58,7 +71,6 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
             if (p != null) player = p.transform;
         }
 
-        // Ensure root motion is firmly turned OFF on the animator
         if (anim != null) anim.applyRootMotion = false;
 
         meshRenderers = GetComponentsInChildren<Renderer>();
@@ -77,9 +89,56 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         }
     }
 
+    public void InitializeStats(float healthMultiplier, float speedMultiplier, float damageMultiplier, float sizeScale = 1.0f)
+    {
+        maxHealth = Mathf.RoundToInt(maxHealth * healthMultiplier);
+        currentHealth = maxHealth;
+        moveSpeed *= speedMultiplier;
+        attackLungeSpeed *= speedMultiplier;
+        attackDamage = Mathf.RoundToInt(attackDamage * damageMultiplier);
+
+        finalTargetScale = Vector3.one * sizeScale;
+
+        StartCoroutine(SpawnRoutine());
+    }
+
+    IEnumerator SpawnRoutine()
+    {
+        isSpawning = true;
+
+        // Turn off physics temporarily so they don't bounce off each other
+        rb.isKinematic = true;
+        col.enabled = false;
+
+        if (spawnEffect != null)
+        {
+            Instantiate(spawnEffect, transform.position, Quaternion.identity);
+        }
+
+        ChangeAnimationState(spawnAnimationName, 0.1f);
+
+        // Smoothly scale up from 0
+        transform.localScale = Vector3.zero;
+        float elapsed = 0f;
+
+        while (elapsed < spawnDuration)
+        {
+            transform.localScale = Vector3.Lerp(Vector3.zero, finalTargetScale, elapsed / spawnDuration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.localScale = finalTargetScale;
+
+        // Turn physics back on
+        rb.isKinematic = false;
+        col.enabled = true;
+        isSpawning = false;
+    }
+
     void FixedUpdate()
     {
-        if (isDead || isStunned || player == null) return;
+        if (isDead || isStunned || isSpawning || player == null) return;
 
         if (cooldownTimer > 0) cooldownTimer -= Time.fixedDeltaTime;
         if (isAttacking) return;
@@ -128,7 +187,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         ChangeAnimationState("attack1", 0.1f);
 
         isParryable = true;
-        yield return new WaitForSeconds(0.5f); // WINDUP
+        yield return new WaitForSeconds(0.5f);
 
         if (audioSource != null && attack1_Sound != null) audioSource.PlayOneShot(attack1_Sound, attackVolume);
         isParryable = false;
@@ -141,7 +200,6 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         {
             if (isStunned || isDead) break;
 
-            // --- LUNGE FIX: Physically push the Rigidbody (and Collider) forward ---
             rb.linearVelocity = transform.forward * attackLungeSpeed + new Vector3(0, rb.linearVelocity.y, 0);
 
             if (!hasHit && Vector3.Distance(transform.position, player.position) <= meleeRange + 0.5f)
@@ -150,10 +208,10 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
                 hasHit = true;
             }
             elapsed += Time.deltaTime;
-            yield return new WaitForFixedUpdate(); // Wait for physics update
+            yield return new WaitForFixedUpdate();
         }
 
-        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Stop lunging
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
 
         yield return new WaitForSeconds(1.33f - activeDuration);
         cooldownTimer = 0.5f;
@@ -167,7 +225,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         ChangeAnimationState("attack2", 0.1f);
 
         isParryable = true;
-        yield return new WaitForSeconds(0.5f); // WINDUP 1
+        yield return new WaitForSeconds(0.5f);
 
         if (audioSource != null && attack2_Sound1 != null) audioSource.PlayOneShot(attack2_Sound1, attackVolume);
         isParryable = false;
@@ -182,7 +240,6 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         {
             if (isStunned || isDead) break;
 
-            // LUNGE FIX 1
             rb.linearVelocity = transform.forward * (attackLungeSpeed * 0.8f) + new Vector3(0, rb.linearVelocity.y, 0);
 
             if (!hasHit1 && Vector3.Distance(transform.position, player.position) <= meleeRange + 0.5f)
@@ -194,7 +251,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
             yield return new WaitForFixedUpdate();
         }
 
-        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Stop lunging 1
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
         isParryable = true;
 
         yield return new WaitForSeconds(0.46f + attack2_SecondHitNudge);
@@ -212,7 +269,6 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         {
             if (isStunned || isDead) break;
 
-            // LUNGE FIX 2
             rb.linearVelocity = transform.forward * attackLungeSpeed + new Vector3(0, rb.linearVelocity.y, 0);
 
             if (!hasHit2 && Vector3.Distance(transform.position, player.position) <= meleeRange + 0.5f)
@@ -224,7 +280,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
             yield return new WaitForFixedUpdate();
         }
 
-        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); // Stop lunging 2
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
 
         yield return new WaitForSeconds(2.3f - hit1Duration - hit2Duration);
         cooldownTimer = 0.5f;
@@ -246,7 +302,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
     public void OnParried()
     {
-        if (isStunned || isDead) return;
+        if (isStunned || isDead || isSpawning) return;
         StopAllCoroutines();
         StartCoroutine(StunRoutine());
     }
@@ -266,13 +322,10 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
     public void TakeDamage(int damage)
     {
-        if (isDead) return;
+        if (isDead || isSpawning) return;
 
         currentHealth -= damage;
         StartCoroutine(FlashRedRoutine());
-
-       /* EnemyVisuals visuals = GetComponent<EnemyVisuals>();
-        if (visuals != null) visuals.Flash();*/
 
         if (currentHealth <= 0)
         {
@@ -299,7 +352,7 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
 
     void Die()
     {
-        if (isDead) return; // Prevent double-calls
+        if (isDead) return;
         isDead = true;
 
         StopAllCoroutines();
@@ -328,6 +381,11 @@ public class LizardMonsterAI : MonoBehaviour, IDamageable
         {
             AudioClip randomClip = deathSounds[Random.Range(0, deathSounds.Length)];
             audioSource.PlayOneShot(randomClip, deathVolume);
+        }
+
+        if (ArenaWaveManager.Instance != null)
+        {
+            ArenaWaveManager.Instance.OnEnemyKilled();
         }
 
         ChangeAnimationState("die", 0.1f);

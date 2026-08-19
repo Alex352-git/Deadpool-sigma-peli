@@ -94,7 +94,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: bf6e1ecaee2ae5a46b759c1ee8c5865e, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
-  m_ApplyRootMotion: 0
+  m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 1
@@ -262,18 +262,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81da310248a3b9041a6e67aab971548d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LizardMonsterAI
-  audioSource: {fileID: 0}
-  attack1_Sound: {fileID: 0}
-  attack2_Sound1: {fileID: 0}
-  attack2_Sound2: {fileID: 0}
+  audioSource: {fileID: 1992047731690142562}
+  attack1_Sound: {fileID: 8300000, guid: 1baa2b4a512021a46ae4c7c48e2e5221, type: 3}
+  attack2_Sound1: {fileID: 8300000, guid: c1900d5813d07da43be8dfc609a74fb4, type: 3}
+  attack2_Sound2: {fileID: 8300000, guid: c1900d5813d07da43be8dfc609a74fb4, type: 3}
   attack2_SecondHitNudge: 0
   attackVolume: 1
-  deathSounds: []
+  deathSounds:
+  - {fileID: 8300000, guid: aac8323004889e5489e18e9aa80deb11, type: 3}
+  - {fileID: 8300000, guid: f0eb4ddd9d0fc4649935399508695540, type: 3}
+  - {fileID: 8300000, guid: f6de4c1b5ba8b8c43ab4040d87ef87d6, type: 3}
   deathVolume: 1
-  deathEffect: {fileID: 0}
+  deathEffect: {fileID: 2613736176984427118, guid: a782aaa8d77e68d478f866d4d26f4419, type: 3}
   maxHealth: 100
   currentHealth: 0
-  isDead: 0
+  isDead: 1
   player: {fileID: 0}
   detectionRadius: 15
   meleeRange: 3
