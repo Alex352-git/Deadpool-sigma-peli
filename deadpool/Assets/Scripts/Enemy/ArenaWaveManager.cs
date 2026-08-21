@@ -9,7 +9,7 @@ public class ArenaWaveManager : MonoBehaviour
     [Header("Prefabs & Locations")]
     public GameObject lizardPrefab;
     public Transform[] spawnPoints;
-    public float spawnRadius = 3.0f; // Spreads enemies out so they don't overlap
+    public float spawnRadius = 3.0f; // Spreads enemies out if multiple spawn at the same point
 
     [Header("UI Text")]
     public TextMeshProUGUI waveBannerText;
@@ -18,13 +18,13 @@ public class ArenaWaveManager : MonoBehaviour
     [Header("Wave Configuration")]
     public int baseEnemiesPerWave = 5;
     public int extraEnemiesPerWave = 3;
-    public float timeBetweenSpawns = 1.0f;
+    public float timeBetweenSpawns = 2.0f; // Time between simultaneous wave bursts
     public float timeBetweenWaves = 4.0f;
 
     [Header("Difficulty Scaling")]
-    public float speedIncreaseFactor = 0.08f; // +8% speed per wave
-    public float healthIncreaseFactor = 0.15f; // +15% health per wave
-    public float damageIncreaseFactor = 0.10f; // +10% damage per wave
+    public float speedIncreaseFactor = 0.08f;
+    public float healthIncreaseFactor = 0.15f;
+    public float damageIncreaseFactor = 0.10f;
 
     [Header("Boss Settings")]
     public int bossEveryNWaves = 3;
@@ -69,32 +69,41 @@ public class ArenaWaveManager : MonoBehaviour
         if (waveBannerText != null) waveBannerText.gameObject.SetActive(false);
         isWaveInProgress = true;
 
-        if (isBossWave)
+        // Spawn Boss at a random spawn point first if it's a Boss wave
+        if (isBossWave && spawnPoints.Length > 0)
         {
-            SpawnEnemy(isBoss: true);
+            Transform bossSpawn = spawnPoints[Random.Range(0, spawnPoints.Length)];
+            SpawnEnemyAtPoint(bossSpawn, isBoss: true);
             enemiesLeftToSpawn--;
             yield return new WaitForSeconds(timeBetweenSpawns);
         }
 
+        // --- SIMULTANEOUS SPAWNING LOOP ---
         while (enemiesLeftToSpawn > 0)
         {
-            SpawnEnemy(isBoss: false);
-            enemiesLeftToSpawn--;
+            // Spawn 1 enemy at EVERY spawn point simultaneously in the same frame
+            for (int i = 0; i < spawnPoints.Length; i++)
+            {
+                if (enemiesLeftToSpawn <= 0) break;
+
+                SpawnEnemyAtPoint(spawnPoints[i], isBoss: false);
+                enemiesLeftToSpawn--;
+            }
+
+            // Wait before spawning the next simultaneous group
             yield return new WaitForSeconds(timeBetweenSpawns);
         }
     }
 
-    void SpawnEnemy(bool isBoss)
+    void SpawnEnemyAtPoint(Transform targetPoint, bool isBoss)
     {
-        if (spawnPoints.Length == 0 || lizardPrefab == null) return;
+        if (targetPoint == null || lizardPrefab == null) return;
 
-        Transform chosenPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-
-        // Calculate a random position around the spawn point
+        // Apply a small position variation so enemies at the same spawn point don't overlap completely
         Vector2 randomOffset = Random.insideUnitCircle * spawnRadius;
-        Vector3 spawnPos = chosenPoint.position + new Vector3(randomOffset.x, 0, randomOffset.y);
+        Vector3 spawnPos = targetPoint.position + new Vector3(randomOffset.x, 0, randomOffset.y);
 
-        GameObject newLizard = Instantiate(lizardPrefab, spawnPos, chosenPoint.rotation);
+        GameObject newLizard = Instantiate(lizardPrefab, spawnPos, targetPoint.rotation);
 
         LizardMonsterAI ai = newLizard.GetComponent<LizardMonsterAI>();
         if (ai != null)
