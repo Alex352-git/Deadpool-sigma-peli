@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f2dfe11b295b1d74f99960600a9e2d8e
+guid: d10d2249ad72802498fbd2c70deb42b5
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
@@ -32,11 +32,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: mixamo.com
+      name: Run
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 15
+      lastFrame: 19
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -530,13 +530,13 @@ ModelImporter:
         length: 0
         modified: 0
     skeleton:
-    - name: Run(Clone)
+    - name: Run (1)(Clone)
       parentName: 
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: pPlane4
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.0021528436, y: 0.08362226, z: 0}
       rotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
       scale: {x: -0.08923016, y: 1, z: -0.08923016}
@@ -566,7 +566,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: polySurface11
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.00031819142, y: 0.08242701, z: 0.0044826586}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1.2711111, y: 1.1376543, z: 1}
@@ -576,22 +576,22 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: pSphere1
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.0019866661, y: 0.08248183, z: 0.0034874144}
       rotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
       scale: {x: 0.096549, y: 0.096549, z: 0.09172154}
     - name: pSphere2
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.00234081, y: 0.08249436, z: 0.0034874144}
       rotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
       scale: {x: 0.096549, y: 0.096549, z: 0.09172154}
     - name: pPlane6
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.0075343917, y: -0.009172184, z: -0.006027622}
       rotation: {x: 0, y: 0.6204041, z: -0, w: 0.7842823}
       scale: {x: 1.7691739, y: 0.1929663, z: 0.34093457}
     - name: pPlane8
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.00558106, y: 0.04598521, z: -0.00033140837}
       rotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
       scale: {x: 1, y: 1, z: 1}
@@ -601,7 +601,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: pCylinder1
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.016793516, y: 0.053080477, z: -0.0023342427}
       rotation: {x: -0.044455938, y: -0.0039464855, z: 0.08833712, w: 0.9950903}
       scale: {x: 0.31097656, y: 1.1418493, z: 0.5254858}
@@ -611,7 +611,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: pPlane9
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.00051859854, y: 0.04598521, z: -0.00089291006}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 0.8779558}
@@ -621,7 +621,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCube1"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.0037992008, y: 0.021886453, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1.5970371, y: 1, z: 1}
@@ -631,7 +631,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder1"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.0071343933, y: 0.06059046, z: -0.0004958096}
       rotation: {x: 0, y: -0, z: -0.046658643, w: 0.9989109}
       scale: {x: 0.29024917, y: 0.686766, z: 0.29024917}
@@ -641,7 +641,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder2"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.0018572883, y: 0.06367851, z: -0.0004958096}
       rotation: {x: 0, y: -0, z: -0.046658643, w: 0.9989109}
       scale: {x: 0.29024917, y: 0.686766, z: 0.29024917}
@@ -651,7 +651,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder3"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.009006976, y: 0.060632687, z: -0.0004958096}
       rotation: {x: 0, y: 0, z: 0.028927404, w: 0.9995815}
       scale: {x: 0.27601728, y: 0.65309155, z: 0.27601728}
@@ -661,7 +661,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder4"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.015804162, y: 0.054554958, z: -0.0004958096}
       rotation: {x: 0, y: 0, z: 0.11176023, w: 0.99373525}
       scale: {x: 0.24368648, y: 0.57659286, z: 0.24368648}
@@ -671,7 +671,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder5"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.014352726, y: 0.0425985, z: -0.0004958096}
       rotation: {x: 0, y: -0, z: -0.39872548, w: 0.9170704}
       scale: {x: 0.29024917, y: 0.686766, z: 0.29024917}
@@ -681,7 +681,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCube2"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.002356228, y: 0.04426367, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -691,7 +691,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder6"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.0025175202, y: 0.04576917, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -701,7 +701,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder7"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.0025175202, y: 0.04567833, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -711,7 +711,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder8"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.0047155856, y: 0.04567833, z: 0.0000000017881393}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -721,7 +721,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder9"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.00065197225, y: 0.03748928, z: -0.0008848023}
       rotation: {x: 0.70022076, y: 0.09844267, z: 0.70022076, w: 0.09844267}
       scale: {x: 0.20195691, y: 0.1686425, z: 0.28105938}
@@ -731,7 +731,7 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder10"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.00051859854, y: 0.04598521, z: -0.00089291006}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -741,22 +741,22 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pCylinder11"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: "m\xE3o:pPipe1"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.0005959235, y: 0.050457697, z: -0.001494535}
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1.0525112, y: 0.4383779, z: 1.3490328}
     - name: "m\xE3o:pCylinder12"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0.00050969404, y: 0.05045649, z: 0.0045321137}
       rotation: {x: 0.7526386, y: 0, z: 0, w: 0.65843385}
       scale: {x: 0.23168679, y: 0.029235655, z: 0.23168679}
     - name: "m\xE3o:group3"
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: -0.00021625709, y: 0.06093234, z: -0.010530361}
       rotation: {x: -0.03565875, y: 0, z: -0, w: 0.999364}
       scale: {x: 1, y: 1, z: 1}
@@ -796,7 +796,7 @@ ModelImporter:
       rotation: {x: 0, y: 0, z: 0.97122747, w: 0.23815382}
       scale: {x: 0.15205155, y: 0.035825655, z: 0.15205155}
     - name: mixamorig:Hips
-      parentName: Run(Clone)
+      parentName: Run (1)(Clone)
       position: {x: 0, y: 0.050135497, z: 0.0014661398}
       rotation: {x: 0.000000010132579, y: -0.0000000028551428, z: -0.000000027775997, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -843,8 +843,8 @@ ModelImporter:
     - name: mixamorig:LeftToeBase
       parentName: mixamorig:LeftFoot
       position: {x: 1.702165e-11, y: 0.010360246, z: 1.5660946e-10}
-      rotation: {x: 0.32554704, y: 0.06266942, z: -0.021630524, w: 0.94319874}
-      scale: {x: 1.0000008, y: 1.0000007, z: 0.9999996}
+      rotation: {x: 0.32554695, y: 0.062669426, z: -0.021630501, w: 0.9431988}
+      scale: {x: 1.0000008, y: 1.0000007, z: 0.9999998}
     - name: mixamorig:LeftToe_End
       parentName: mixamorig:LeftToeBase
       position: {x: -3.5055722e-11, y: 0.0042313733, z: -6.636656e-12}

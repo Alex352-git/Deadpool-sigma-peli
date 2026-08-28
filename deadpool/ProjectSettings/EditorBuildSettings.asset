@@ -4,19 +4,6 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/Alex scene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
-<<<<<<< HEAD
-    path: Assets/Scenes/Ilo scene.unity
-    guid: 4e0309aa327fa8746aad683142dabf17
-  - enabled: 1
-=======
->>>>>>> 89fed861c99d436a4c5f32441825a3d676b7b25a
-    path: Assets/Scenes/MainScene.unity
-    guid: 507dc388ead73dc43b49880c082d3a4f
-  m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  m_Scenes: []
+  m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

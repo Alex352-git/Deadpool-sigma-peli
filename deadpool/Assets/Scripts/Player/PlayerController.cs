@@ -1,13 +1,13 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem; // Uses Unity's New Input System
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider), typeof(AudioSource))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 7f;
-    public float rotationSpeed = 15f;
+    public float rotationSpeed = 12f;
     public float jumpForce = 5f;
     public Transform cameraTransform;
 
@@ -16,7 +16,12 @@ public class PlayerController : MonoBehaviour
     public float attackRange = 1.8f;
     public int attackDamage = 25;
     public LayerMask enemyLayers;
-    public float attackCooldown = 0.5f;
+
+    [Header("Individual Combo Timings")]
+    public float attack1Duration = 0.5f;
+    public float attack2Duration = 0.4f;
+    public float attack3Duration = 0.6f;
+    public float maxComboDelay = 1.2f;
 
     [Header("Audio")]
     public AudioClip attackSound;
@@ -29,33 +34,29 @@ public class PlayerController : MonoBehaviour
 
     private bool isAttacking = false;
     private bool isGrounded = true;
-    private float nextAttackTime = 0f;
     private string currentAnimState;
+
+    private int clickCount = 0;
+    private float lastClickTime = 0f;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
-
-        // Grab PlayerStats from either this object or parent
-        stats = GetComponent<PlayerStats>();
-        if (stats == null) stats = GetComponentInParent<PlayerStats>();
-
+        stats = GetComponent<PlayerStats>() ?? GetComponentInParent<PlayerStats>();
         audioSource = GetComponent<AudioSource>();
     }
 
     void Start()
     {
+        // Forces the script to use the actual lens, fixing backward running
         if (cameraTransform == null && Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
         }
 
-        // Lock cursor to screen center
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        if (anim != null) anim.applyRootMotion = false;
     }
 
     void Update()
@@ -63,17 +64,26 @@ public class PlayerController : MonoBehaviour
         if (stats != null && stats.currentHealth <= 0) return;
 
         CheckGrounded();
-
-        // Safety check for active input devices
         if (Keyboard.current == null || Mouse.current == null) return;
 
-        // Left Click -> Attack
-        if (Time.time >= nextAttackTime && Mouse.current.leftButton.wasPressedThisFrame)
+        if (Time.time - lastClickTime > maxComboDelay)
         {
-            StartCoroutine(AttackRoutine());
+            clickCount = 0;
         }
 
-        // Spacebar -> Jump
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            lastClickTime = Time.time;
+            clickCount++;
+
+            if (clickCount > 3) clickCount = 1;
+
+            if (!isAttacking)
+            {
+                StartCoroutine(ComboAttackRoutine());
+            }
+        }
+
         if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded && !isAttacking)
         {
             Jump();
@@ -95,9 +105,6 @@ public class PlayerController : MonoBehaviour
 
     void MoveAndRotate()
     {
-        if (Keyboard.current == null) return;
-
-        // Read WASD input directly via New Input System
         float horizontal = 0f;
         float vertical = 0f;
 
@@ -110,54 +117,79 @@ public class PlayerController : MonoBehaviour
 
         if (direction.magnitude >= 0.1f && cameraTransform != null)
         {
-            // Calculate movement angle relative to camera view
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-
             Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
 
+            Vector3 moveDir = targetRotation * Vector3.forward;
             rb.linearVelocity = new Vector3(moveDir.x * moveSpeed, rb.linearVelocity.y, moveDir.z * moveSpeed);
 
-            if (isGrounded) ChangeAnimationState("run");
+            if (isGrounded) ChangeAnimationState("Run", 0.1f);
         }
         else
         {
             rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0);
-            if (isGrounded) ChangeAnimationState("idle");
+            if (isGrounded) ChangeAnimationState("Idle", 0.1f);
         }
     }
 
-    IEnumerator AttackRoutine()
+    IEnumerator ComboAttackRoutine()
     {
         isAttacking = true;
-        nextAttackTime = Time.time + attackCooldown;
 
-        ChangeAnimationState("attack", 0.1f);
-        if (audioSource != null && attackSound != null) audioSource.PlayOneShot(attackSound);
-
-        yield return new WaitForSeconds(0.2f);
-
-        Vector3 hitCenter = attackPoint != null ? attackPoint.position : transform.position + transform.forward;
-        Collider[] hitEnemies = Physics.OverlapSphere(hitCenter, attackRange, enemyLayers);
-
-        foreach (Collider enemyCol in hitEnemies)
+        while (clickCount > 0)
         {
-            IDamageable damageable = enemyCol.GetComponentInParent<IDamageable>();
-            if (damageable != null)
+            int currentComboStep = clickCount;
+            float stepDuration = attack1Duration;
+
+            // Assign dynamic duration based on which swing is playing
+            if (currentComboStep == 1)
             {
-                damageable.TakeDamage(attackDamage);
+                ChangeAnimationState("Attack1", 0.05f);
+                stepDuration = attack1Duration;
+            }
+            else if (currentComboStep == 2)
+            {
+                ChangeAnimationState("Attack2", 0.05f);
+                stepDuration = attack2Duration;
+            }
+            else if (currentComboStep >= 3)
+            {
+                ChangeAnimationState("Attack3", 0.05f);
+                stepDuration = attack3Duration;
+                clickCount = 0;
+            }
+
+            if (audioSource != null && attackSound != null) audioSource.PlayOneShot(attackSound);
+
+            yield return new WaitForSeconds(stepDuration * 0.4f);
+
+            Vector3 hitCenter = attackPoint != null ? attackPoint.position : transform.position + transform.forward;
+            Collider[] hitEnemies = Physics.OverlapSphere(hitCenter, attackRange, enemyLayers);
+            foreach (Collider enemyCol in hitEnemies)
+            {
+                IDamageable damageable = enemyCol.GetComponentInParent<IDamageable>();
+                if (damageable != null) damageable.TakeDamage(attackDamage);
+            }
+
+            yield return new WaitForSeconds(stepDuration * 0.6f);
+
+            if (clickCount == currentComboStep)
+            {
+                clickCount = 0;
+                break;
             }
         }
 
-        yield return new WaitForSeconds(0.3f);
         isAttacking = false;
+        ChangeAnimationState("Idle", 0.15f);
     }
 
     void Jump()
     {
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-        ChangeAnimationState("jump", 0.1f);
+        ChangeAnimationState("Jump", 0.1f);
         if (audioSource != null && jumpSound != null) audioSource.PlayOneShot(jumpSound);
     }
 
@@ -166,10 +198,11 @@ public class PlayerController : MonoBehaviour
         isGrounded = Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down, 0.4f);
     }
 
-    void ChangeAnimationState(string newState, float blendTime = 0.2f)
+    void ChangeAnimationState(string newState, float transitionTime)
     {
-        if (currentAnimState == newState || anim == null) return;
-        anim.CrossFadeInFixedTime(newState, blendTime);
+        // Removed the strict state lock so rapid combo chaining doesn't get blocked
+        if (anim == null) return;
+        anim.CrossFadeInFixedTime(newState, transitionTime);
         currentAnimState = newState;
     }
 
