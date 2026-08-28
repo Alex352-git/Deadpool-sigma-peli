@@ -4,6 +4,12 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Ilo scene.unity
+    guid: 4e0309aa327fa8746aad683142dabf17
+  - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: 507dc388ead73dc43b49880c082d3a4f
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
