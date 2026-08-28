@@ -51,7 +51,7 @@ PrefabInstance:
     - target: {fileID: -4368760257972590019, guid: 2fcb218bae311564bb0644962a1b1d0d, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 2de3ec5665726fd43a69c219af24e375, type: 2}
+      objectReference: {fileID: 2100000, guid: 14830531b59d3b443885c8aaacb7e16e, type: 2}
     - target: {fileID: 919132149155446097, guid: 2fcb218bae311564bb0644962a1b1d0d, type: 3}
       propertyPath: m_Name
       value: Lizard_A
@@ -262,6 +262,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81da310248a3b9041a6e67aab971548d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LizardMonsterAI
+  spawnEffect: {fileID: 0}
+  spawnAnimationName: idle
+  spawnDuration: 1.5
+  isSpawning: 0
   audioSource: {fileID: 1992047731690142562}
   attack1_Sound: {fileID: 8300000, guid: 1baa2b4a512021a46ae4c7c48e2e5221, type: 3}
   attack2_Sound1: {fileID: 8300000, guid: c1900d5813d07da43be8dfc609a74fb4, type: 3}

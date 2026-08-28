@@ -15,6 +15,11 @@ public class PlayerStats : MonoBehaviour, IDamageable
     public float maxHealth = 100f;
     public float currentHealth;
 
+    [Header("Deadpool Healing Factor")]
+    public bool enableHealingFactor = true;
+    public float healthRegenPerSecond = 5f; // How much HP he gets back every second
+    private float regenTimer = 0f;
+
     [Header("Invulnerability")]
     public float iFramesDuration = 1.0f;
     private float iFrameTimer;
@@ -25,17 +30,16 @@ public class PlayerStats : MonoBehaviour, IDamageable
     public GameObject deathScreenUI;
 
     [Header("Fading Settings")]
-    public Image fadeImage; // Drag a black UI Image here
+    public Image fadeImage;
     public float fadeSpeed = 1.0f;
 
     void Start()
     {
         currentHealth = maxHealth;
 
-        // Ensure the fade image is invisible at the start
         if (fadeImage != null)
         {
-            fadeImage.gameObject.SetActive(true); // Keep it active but clear
+            fadeImage.gameObject.SetActive(true);
             Color c = fadeImage.color;
             c.a = 0;
             fadeImage.color = c;
@@ -45,6 +49,18 @@ public class PlayerStats : MonoBehaviour, IDamageable
     void Update()
     {
         if (iFrameTimer > 0) iFrameTimer -= Time.deltaTime;
+
+        // --- HEALING FACTOR LOGIC ---
+        if (enableHealingFactor && currentHealth > 0 && currentHealth < maxHealth)
+        {
+            regenTimer += Time.deltaTime;
+            if (regenTimer >= 1f) // Tick every 1 second
+            {
+                Heal(healthRegenPerSecond);
+                regenTimer = 0f; // Reset timer
+            }
+        }
+
         UpdateUI();
     }
 
@@ -72,23 +88,21 @@ public class PlayerStats : MonoBehaviour, IDamageable
         }
     }
 
-    public void Heal(float damage)
+    public void Heal(float amount)
     {
-        currentHealth += damage;
+        currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         UpdateUI();
     }
 
     public void Die()
     {
-        // Prevent multiple death triggers
         this.enabled = false;
         StartCoroutine(DeathRoutine());
     }
 
     private IEnumerator DeathRoutine()
     {
-        // 1. Start the Fade to Black
         if (fadeImage != null)
         {
             float alpha = 0;
@@ -102,10 +116,8 @@ public class PlayerStats : MonoBehaviour, IDamageable
             }
         }
 
-        // 2. Wait a moment in the darkness
         yield return new WaitForSeconds(1.0f);
 
-        // 3. Show the buttons (Restart/Quit)
         if (deathScreenUI != null) deathScreenUI.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
