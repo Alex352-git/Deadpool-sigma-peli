@@ -112,13 +112,18 @@ public class ArenaWaveManager : MonoBehaviour
             float healthMult = 1.0f + ((currentWave - 1) * healthIncreaseFactor);
             float damageMult = 1.0f + ((currentWave - 1) * damageIncreaseFactor);
 
+            // Grab the base scale from the prefab so it isn't overwritten with 1
+            float baseScale = lizardPrefab.transform.localScale.x;
+
             if (isBoss)
             {
-                ai.InitializeStats(healthMult * bossHealthMultiplier, speedMult * 0.9f, damageMult * 2.0f, bossSizeScale);
+                // Pass the base scale multiplied by the boss scale (e.g., 7 * 2.2)
+                ai.InitializeStats(healthMult * bossHealthMultiplier, speedMult * 0.9f, damageMult * 2.0f, baseScale * bossSizeScale);
             }
             else
             {
-                ai.InitializeStats(healthMult, speedMult, damageMult, 1.0f);
+                // Pass the prefab's base scale (e.g., 7)
+                ai.InitializeStats(healthMult, speedMult, damageMult, baseScale);
             }
         }
     }
