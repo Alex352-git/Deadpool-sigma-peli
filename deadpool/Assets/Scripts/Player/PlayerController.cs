@@ -16,12 +16,7 @@ public class PlayerController : MonoBehaviour
     public float attackRange = 1.8f;
     public int attackDamage = 25;
     public LayerMask enemyLayers;
-
-    [Header("Individual Combo Timings")]
-    public float attack1Duration = 0.5f;
-    public float attack2Duration = 0.4f;
-    public float attack3Duration = 0.6f;
-    public float maxComboDelay = 1.2f;
+    public float attackDuration = 0.5f;
 
     [Header("Audio")]
     public AudioClip attackSound;
@@ -36,9 +31,6 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded = true;
     private string currentAnimState;
 
-    private int clickCount = 0;
-    private float lastClickTime = 0f;
-
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -49,7 +41,9 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        // Forces the script to use the actual lens, fixing backward running
+        // FIX: Turns off Root Motion so the model stops flying away from the hitbox!
+        if (anim != null) anim.applyRootMotion = false;
+
         if (cameraTransform == null && Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
@@ -66,22 +60,10 @@ public class PlayerController : MonoBehaviour
         CheckGrounded();
         if (Keyboard.current == null || Mouse.current == null) return;
 
-        if (Time.time - lastClickTime > maxComboDelay)
+        // Start attack only if not currently attacking (uninterruptible)
+        if (Mouse.current.leftButton.wasPressedThisFrame && !isAttacking)
         {
-            clickCount = 0;
-        }
-
-        if (Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            lastClickTime = Time.time;
-            clickCount++;
-
-            if (clickCount > 3) clickCount = 1;
-
-            if (!isAttacking)
-            {
-                StartCoroutine(ComboAttackRoutine());
-            }
+            StartCoroutine(PerformAttackRoutine());
         }
 
         if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded && !isAttacking)
@@ -134,56 +116,31 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    IEnumerator ComboAttackRoutine()
+    IEnumerator PerformAttackRoutine()
     {
         isAttacking = true;
+        ChangeAnimationState("Attack", 0.05f);
 
-        while (clickCount > 0)
+        if (audioSource != null && attackSound != null) audioSource.PlayOneShot(attackSound);
+
+        // Wait until the sword is physically swinging forward (40% into the animation)
+        yield return new WaitForSeconds(attackDuration * 0.4f);
+
+        // Deal Damage to anything in the red sphere
+        Vector3 hitCenter = attackPoint != null ? attackPoint.position : transform.position + transform.forward;
+        Collider[] hitEnemies = Physics.OverlapSphere(hitCenter, attackRange, enemyLayers);
+
+        foreach (Collider enemyCol in hitEnemies)
         {
-            int currentComboStep = clickCount;
-            float stepDuration = attack1Duration;
-
-            // Assign dynamic duration based on which swing is playing
-            if (currentComboStep == 1)
-            {
-                ChangeAnimationState("Attack1", 0.05f);
-                stepDuration = attack1Duration;
-            }
-            else if (currentComboStep == 2)
-            {
-                ChangeAnimationState("Attack2", 0.05f);
-                stepDuration = attack2Duration;
-            }
-            else if (currentComboStep >= 3)
-            {
-                ChangeAnimationState("Attack3", 0.05f);
-                stepDuration = attack3Duration;
-                clickCount = 0;
-            }
-
-            if (audioSource != null && attackSound != null) audioSource.PlayOneShot(attackSound);
-
-            yield return new WaitForSeconds(stepDuration * 0.4f);
-
-            Vector3 hitCenter = attackPoint != null ? attackPoint.position : transform.position + transform.forward;
-            Collider[] hitEnemies = Physics.OverlapSphere(hitCenter, attackRange, enemyLayers);
-            foreach (Collider enemyCol in hitEnemies)
-            {
-                IDamageable damageable = enemyCol.GetComponentInParent<IDamageable>();
-                if (damageable != null) damageable.TakeDamage(attackDamage);
-            }
-
-            yield return new WaitForSeconds(stepDuration * 0.6f);
-
-            if (clickCount == currentComboStep)
-            {
-                clickCount = 0;
-                break;
-            }
+            IDamageable damageable = enemyCol.GetComponentInParent<IDamageable>();
+            if (damageable != null) damageable.TakeDamage(attackDamage);
         }
 
+        // Wait for the follow-through of the animation to finish (remaining 60%)
+        yield return new WaitForSeconds(attackDuration * 0.6f);
+
         isAttacking = false;
-        ChangeAnimationState("Idle", 0.15f);
+        ChangeAnimationState("Idle", 0.2f);
     }
 
     void Jump()
@@ -200,8 +157,12 @@ public class PlayerController : MonoBehaviour
 
     void ChangeAnimationState(string newState, float transitionTime)
     {
-        // Removed the strict state lock so rapid combo chaining doesn't get blocked
         if (anim == null) return;
+
+        // FIX: The animation lock has been returned. Without this, the run animation 
+        // resets 50 times a second, locking the character in the first frame of movement.
+        if (currentAnimState == newState) return;
+
         anim.CrossFadeInFixedTime(newState, transitionTime);
         currentAnimState = newState;
     }
